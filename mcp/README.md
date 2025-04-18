@@ -1,0 +1,1 @@
+ claude mcp add "eigen" npx tsx index.ts 
