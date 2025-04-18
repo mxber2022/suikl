@@ -101,13 +101,17 @@ Please summarize the action and provide any helpful insights about the transfer.
       );
 
       const claudeJson = await claudeResponse.json();
+      
+      // Safely access the Claude response data
+      const responseText = claudeJson?.content?.[0]?.text || 
+        `Transfer of ${amt} tokens completed successfully from ${source.address} to ${destination.address}`;
 
       return {
         content: [
           {
             type: "text",
             text: `
-${claudeJson.content[0].text}
+${responseText}
 
 
           `,
