@@ -19,6 +19,7 @@ import sui from "@wormhole-foundation/sdk/sui";
 import { SignerStuff, getSigner, getTokenDecimals } from "./helpers";
 import { Connection, SendTransactionError } from "@solana/web3.js";
 
+
 const server = new McpServer({
   name: "EigenLayer AVS service",
   version: "1.0.0",
@@ -31,14 +32,18 @@ server.tool(
       .string()
       .describe("The complete user query for transfer amount"),
     amt: z.string().describe("Amount to transfer, as a string (e.g., '0.1')"),
+    sourceChain: z.string().describe("Name of source chain (e.g., 'Sui')"),
+    destChain: z.string().describe("Name of destination chain (e.g., 'Solana')"),
   },
-  async ({ fullPrompt, amt }) => {
+  async ({ fullPrompt, amt, sourceChain, destChain }) => {
     try {
       const wh = await wormhole("Testnet", [evm, solana, sui]);
 
       // Set up source and destination chains
-      const sendChain = wh.getChain("Sui");
-      const rcvChain = wh.getChain("Solana");
+      //@ts-ignore
+      const sendChain = wh.getChain(sourceChain);
+      //@ts-ignore
+      const rcvChain = wh.getChain(destChain);
 
       // Get signer from local key but anything that implements
       const source = await getSigner(sendChain);
