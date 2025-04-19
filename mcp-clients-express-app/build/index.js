@@ -13,7 +13,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const ANTHROPIC_API_KEY = "";
+const ANTHROPIC_API_KEY = "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";
 if (!ANTHROPIC_API_KEY) {
     throw new Error("ANTHROPIC_API_KEY is not set");
 }
