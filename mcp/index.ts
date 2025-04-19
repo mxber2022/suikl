@@ -16,9 +16,12 @@ import {
 import evm from "@wormhole-foundation/sdk/evm";
 import solana from "@wormhole-foundation/sdk/solana";
 import sui from "@wormhole-foundation/sdk/sui";
-import { SignerStuff, getSigner, getTokenDecimals } from "./helpers";
+import { SignerStuff, getSigner, getTokenDecimals } from "./helpers.js";
 import { Connection, SendTransactionError } from "@solana/web3.js";
-
+import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
+import { MIST_PER_SUI } from '@mysten/sui/utils';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { Transaction } from '@mysten/sui/transactions';
 
 const server = new McpServer({
   name: "EigenLayer AVS service",
@@ -129,13 +132,14 @@ ${responseText}
         content: [
           {
             type: "text",
-            text: `Error performing transfer: ${err.message || err}`,
+            text: `Error performing transfer: ${err || err}`,
           },
         ],
       };
     }
   }
 );
+
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
@@ -204,3 +208,156 @@ async function tokenTransfer<N extends Network>(
 function waitFor(seconds: number) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
+
+
+server.tool(
+  "balance",
+  {
+    fullPrompt: z
+      .string()
+      .describe("The complete user query for there balance"),
+  },
+  async ({ fullPrompt }) => {
+    try {
+    
+
+      const suiClient = new SuiClient({ url: getFullnodeUrl('testnet') });
+      const suiBefore = await suiClient.getBalance({
+        owner: "0x3215f1a549945aeda6afe4c00bfd9d9c5bf25ab34330c47c6d3dd1a8c4e4ee8b",
+        coinType:"0x2::sui::SUI"
+      });
+
+      const convert = (balance: any) => {
+        return Number.parseInt(balance.totalBalance) / Number(MIST_PER_SUI);
+      };
+
+      const balance = `
+Your current balance is ${suiBefore.totalBalance} SUI.
+      `;
+
+      const claudeResponse = await fetch(
+        "https://api.anthropic.com/v1/messages",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": process.env.CLAUDE_API_KEY || "",
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: "claude-3-7-sonnet-20250219",
+            max_tokens: 1024,
+            messages: [
+              {
+                role: "user",
+                content: `
+                      You are a cross-chain token transfer assistant using the Wormhole protocol.
+
+                      A user has initiated to check there balance
+              
+                      User query: ${fullPrompt}
+
+                      Please summarize the action and provide any helpful insights about the transfer.
+              `,
+              },
+            ],
+          }),
+        }
+      );
+
+      const claudeJson = await claudeResponse.json();
+      
+      // Safely access the Claude response data
+      const responseText = claudeJson?.content?.[0]?.text || 
+        `Your current balance is ${Number(suiBefore.totalBalance)/(Number(MIST_PER_SUI))} SUI.}`;
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `
+${responseText}
+
+
+          `,
+          },
+        ],
+      };
+    } catch (err) {
+      console.error("Transfer Error:", err);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error performing transfer: ${err || err}`,
+          },
+        ],
+      };
+    }
+  }
+);
+
+server.tool(
+  "transferTokens",
+  {
+    fullPrompt: z
+      .string()
+      .describe("The complete user query for transfer amount"),
+    amt: z.string().describe("Amount to transfer, as a string (e.g., '0.1')"),
+    token: z.string().describe("Name of token (e.g., 'Sui')"),
+    address: z
+      .string()
+      .describe(
+        "Address to transfer (e.g., '0x0cCEb44dbbAF7dE58D8D0e12c93cbE553f0d6Ebf')"
+      ),
+  },
+  async ({ fullPrompt, amt, token, address }) => {
+    try {
+      const client = new SuiClient({ url: getFullnodeUrl("testnet") });
+      const keypair = Ed25519Keypair.deriveKeypair(
+        "faint clarify curve diesel satoshi angry half spirit inner quiz crucial drum"
+      );
+
+      const tx = new Transaction();
+      const [coin] = tx.splitCoins(tx.gas, [
+        BigInt(Number(amt) * Number(MIST_PER_SUI)),
+      ]);
+      tx.transferObjects([coin], address);
+
+      // Sign and execute the transaction
+      const result = await client.signAndExecuteTransaction({
+        signer: keypair,
+        transaction: tx,
+      });
+
+      console.log("✅ Transfer result:", result);
+
+      const transferInfo = `
+Transfer completed successfully!
+Amount: ${amt} ${token}
+Recipient: ${address}
+      `;
+
+      let responseText = `✅ Transfer of ${amt} ${token} to ${address} completed successfully.`;
+        
+      return {
+        content: [
+          {
+            type: "text",
+            text: responseText,
+          },
+        ],
+      };
+    } catch (err: any) {
+      console.error("❌ Transfer Error:", err);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `❌ Error performing transfer: ${err.message || err}`,
+          },
+        ],
+      };
+    }
+  }
+);
