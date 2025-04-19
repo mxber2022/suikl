@@ -26,12 +26,12 @@ const server = new McpServer({
 });
 
 server.tool(
-  "transferTokens",
+  "bridgeTokens",
   {
     fullPrompt: z
       .string()
-      .describe("The complete user query for transfer amount"),
-    amt: z.string().describe("Amount to transfer, as a string (e.g., '0.1')"),
+      .describe("The complete user query for bridge amount"),
+    amt: z.string().describe("Amount to bridge, as a string (e.g., '0.1')"),
     sourceChain: z.string().describe("Name of source chain (e.g., 'Sui')"),
     destChain: z.string().describe("Name of destination chain (e.g., 'Solana')"),
   },
@@ -66,7 +66,7 @@ server.tool(
       });
 
       const transferInfo = `
-Transfer completed successfully!
+Bridge completed successfully!
 Source Chain: Sui
 Destination Chain: Solana
 Amount: ${amt}
@@ -109,7 +109,7 @@ Please summarize the action and provide any helpful insights about the transfer.
       
       // Safely access the Claude response data
       const responseText = claudeJson?.content?.[0]?.text || 
-        `Transfer of ${amt} tokens completed successfully from ${source.address} to ${destination.address}`;
+        `Bridge of ${amt} tokens completed successfully from ${source.address} to ${destination.address}`;
 
       return {
         content: [
