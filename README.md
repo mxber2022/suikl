@@ -13,13 +13,6 @@
 ## 🧠 What is the Model Context Protocol (MCP)?
 The **Model Context Protocol (MCP)** is an open standard developed by Anthropic that enables large language model (LLM) applications to interact seamlessly with external tools, systems, and data source. MCP acts as a universal adapter for AI applications, allowing them to access and utilize various data sources and tools without the need for custom integration. citeturn0search0
 
-## 📸 Screenshots
-
-![KayaAI Wallet Dashboard](link-to-dashboard-screenshot)
-*Dashboard showcasing wallet overview and recent transactions.*
-
-![Cross-Chain Transfer Interface](link-to-cross-chain-interface-screenshot)
-*Interface for initiating cross-chain transfers using Wormhole.*
 
 ## 🛠️ Installation
 
@@ -34,8 +27,9 @@
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/yourusername/kayaai-wallet.git
-   cd kayaai-wallet
+   git clone https://github.com/mxber2022/suikl
+   cd suikl
+   cd frontend
    ```
 
 2. **Install Dependencies**
@@ -43,18 +37,9 @@
    ```bash
    npm install
    ```
-
-3. **Configure Environment Variables**
-
-   Create a `.env` file in the root directory and add the following:
-
-   ```env
-   REACT_APP_SUI_API_KEY=your_sui_api_key
-   REACT_APP_WORMHOLE_API_KEY=your_wormhole_api_key
-   REACT_APP_MCP_ENDPOINT=https://your-mcp-endpoint.com
    ```
 
-4. **Start the Development Server**
+3. **Start the Development Server**
 
    ```bash
    npm start
@@ -94,8 +79,8 @@
 
 ## 📬 Contact
 
-- **Project Lead**: [Your Name](mailto:your.email@example.com)
-- **GitHub**: [https://github.com/yourusername/kayaai-wallet](https://github.com/yourusername/kayaai-wallet)
+- **Project Lead**: [Your Name](mailto:mxber2022@gmail.com)
+- **GitHub**: [https://github.com/mxber2022/suikl.git](https://github.com/mxber2022/suikl.git)
 
 ---
 
