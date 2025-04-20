@@ -72,6 +72,60 @@ class MCPClient {
     }
   }
 
+  // async processQuery(query: string) {
+  //   const messages: MessageParam[] = [
+  //     {
+  //       role: "user",
+  //       content: query,
+  //     },
+  //   ];
+
+  //   const response = await this.llm.messages.create({
+  //     model: "claude-3-5-sonnet-20241022",
+  //     max_tokens: 1000,
+  //     messages,
+  //     tools: this.tools,
+  //   });
+
+  //   const finalText = [];
+  //   const toolResults = [];
+
+  //   for (const content of response.content) {
+  //     if (content.type === "text") {
+  //       finalText.push(content.text);
+  //     } else if (content.type === "tool_use") {
+  //       const toolName = content.name;
+  //       const toolArgs = content.input as { [x: string]: unknown } | undefined;
+
+  //       const result = await this.mcp.callTool({
+  //         name: toolName,
+  //         arguments: toolArgs,
+  //       });
+  //       toolResults.push(result);
+  //       finalText.push(
+  //         `[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`
+  //       );
+
+  //       messages.push({
+  //         role: "user",
+  //         content: result.content as string,
+  //       });
+
+  //       const response = await this.llm.messages.create({
+  //         model: "claude-3-5-sonnet-20241022",
+  //         max_tokens: 1000,
+  //         messages,
+  //       });
+
+  //       finalText.push(
+  //         response.content[0].type === "text" ? response.content[0].text : ""
+  //       );
+  //     }
+  //   }
+
+  //   return finalText.join("\n");
+  // }
+
   async processQuery(query: string) {
     const messages: MessageParam[] = [
       {
@@ -79,50 +133,102 @@ class MCPClient {
         content: query,
       },
     ];
-
+  
+    // First interaction with Claude to see if it wants to use a tool
     const response = await this.llm.messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 1000,
       messages,
       tools: this.tools,
     });
-
+  
+    // Check if Claude wants to use a tool
+    const usesTool = response.content.some(content => content.type === "tool_use");
+    
+    if (!usesTool) {
+      // No tool use, just return Claude's response
+      return response.content
+        .filter(content => content.type === "text")
+        .map(content => content.text)
+        .join("");
+    }
+    
+    // Handle tool use scenario
+    const updatedMessages = [...messages];
     const finalText = [];
-    const toolResults = [];
-
+    
     for (const content of response.content) {
       if (content.type === "text") {
         finalText.push(content.text);
       } else if (content.type === "tool_use") {
         const toolName = content.name;
+        const toolId = content.id; // Get the ID of the tool_use block
         const toolArgs = content.input as { [x: string]: unknown } | undefined;
-
-        const result = await this.mcp.callTool({
-          name: toolName,
-          arguments: toolArgs,
-        });
-        toolResults.push(result);
-        finalText.push(
-          `[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`
-        );
-
-        messages.push({
-          role: "user",
-          content: result.content as string,
-        });
-
-        const response = await this.llm.messages.create({
-          model: "claude-3-5-sonnet-20241022",
-          max_tokens: 1000,
-          messages,
-        });
-
-        finalText.push(
-          response.content[0].type === "text" ? response.content[0].text : ""
-        );
+        
+        finalText.push(`[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`);
+        
+        try {
+          // Call the tool
+          const result = await this.mcp.callTool({
+            name: toolName,
+            arguments: toolArgs,
+          });
+          
+          // Directly extract the text from the tool's response
+          let toolResponse = "";
+          
+          if (result.content && Array.isArray(result.content)) {
+            // If the content is an array of content blocks
+            for (const block of result.content) {
+              if (block.type === "text" && block.text) {
+                toolResponse += block.text;
+              }
+            }
+          } else if (typeof result.content === "string") {
+            // If the content is just a string
+            toolResponse = result.content;
+          }
+          
+          // FOR BALANCE TOOL: If this is the balance tool, return the response directly
+          if (toolName === "balance") {
+            return toolResponse;
+          }
+          
+          // For other tools, add the tool's response to the messages array
+          updatedMessages.push({
+            role: "assistant",
+            content: [{
+              type: "tool_use",
+              id: toolId, // Include the ID from the original tool_use block
+              name: toolName,
+              input: toolArgs
+            }],
+          });
+          
+          updatedMessages.push({
+            role: "user", 
+            content: toolResponse
+          });
+          
+          // Get Claude's response to the tool result
+          const followUpResponse = await this.llm.messages.create({
+            model: "claude-3-5-sonnet-20241022",
+            max_tokens: 1000,
+            messages: updatedMessages,
+          });
+          
+          // Add Claude's response to finalText
+          for (const content of followUpResponse.content) {
+            if (content.type === "text") {
+              finalText.push(content.text);
+            }
+          }
+        } catch (error) {
+          finalText.push(`Error calling tool ${toolName}: ${error}`);
+        }
       }
     }
-
+    
     return finalText.join("\n");
   }
 
