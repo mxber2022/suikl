@@ -193,6 +193,11 @@ class MCPClient {
           if (toolName === "balance") {
             return toolResponse;
           }
+
+           // FOR transfer TOOL: If this is the balance tool, return the response directly
+           if (toolName === "transferTokens") {
+            return toolResponse;
+          }
           
           // For other tools, add the tool's response to the messages array
           updatedMessages.push({

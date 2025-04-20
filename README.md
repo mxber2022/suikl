@@ -1,6 +1,6 @@
-# KayaAI
+# KayaToast
 
-**KayaAI Wallet** is a next-generation, agentic cryptocurrency wallet that leverages the power of the Model Context Protocol (MCP), the high-performance SUI blockchain, and the cross-chain capabilities of Wormhole. Designed for intelligent, context-aware interactions, KayaAI Wallet offers seamless and secure crypto asset management across multiple blockchain networks.
+**KayaToast** is a next-generation, agentic cryptocurrency wallet that leverages the power of the Model Context Protocol (MCP), the high-performance SUI blockchain, and the cross-chain capabilities of Wormhole. Designed for intelligent, context-aware interactions, KayaAI Wallet offers seamless and secure crypto asset management across multiple blockchain networks.
 
 ## 🚀 Features
 

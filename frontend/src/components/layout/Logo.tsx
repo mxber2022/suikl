@@ -21,7 +21,7 @@ export const Logo: React.FC<LogoProps> = ({ collapsed }) => {
         collapsed && "hidden"
       )}>
         <span className="text-xl font-light tracking-tight text-dark-900">
-          Token<span className="font-bold">Forge</span>
+          Kaya<span className="font-bold">Toast</span>
         </span>
         <div className="px-1.5 py-0.5 text-[10px] font-medium bg-brand-500/10 text-brand-500 rounded-md">
           BETA

@@ -8,7 +8,7 @@ export const Footer: React.FC = () => {
         <div className="flex items-center gap-2 text-dark-500">
           <Flame className="w-4 h-4 text-brand-500" />
           <span className="text-sm">
-            Built with ❤️ by <a href="#" className="text-brand-600 hover:text-brand-700 transition-colors">KayaAI Team</a>
+            Built with ❤️ by <a href="#" className="text-brand-600 hover:text-brand-700 transition-colors">KayaToast Team</a>
           </span>
         </div>
         <div className="flex items-center gap-6">
